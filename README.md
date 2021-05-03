@@ -9,7 +9,7 @@ PhD candidate:
 Tania Duarte
 
 Affiliation:
-Institute for Molecular Biosciences, The University of Queensland. QLD, Australia
+Institute for Molecular Bioscience, The University of Queensland. QLD, Australia
 
 Year:
 2021
