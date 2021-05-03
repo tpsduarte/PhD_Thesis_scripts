@@ -1,1 +1,28 @@
+##Thesis - Chapter 3 - Scripts
 
+##Basecalling with Guppy v3.3.0:
+
+#MinION basecall:
+guppy_basecaller -i <input directory>/fast5 -s <output directory> -c dna_r9.4.1_450bps_hac.cfg --qscore_filtering -q 0 --recursive --device "cuda:0 cuda:1 cuda:2 cuda:3" gpu_runners_per_device 4
+
+#PromethION basecall:
+guppy_basecaller -i <input directory>/fast5 -s <output directory> -c dna_r9.4.1_450bps_hac_prom.cfg --qscore_filtering -q 0 --recursive --device "cuda:0 cuda:1 cuda:2 cuda:3" gpu_runners_per_device 4
+
+##Demultiplexing with qcat v1.1.0
+qcat -f <input directory>/<guppy_basecall_file>.fastq -b <output directory> -k RPB004/RLB001 --trim --detect-middle
+
+options -k:
+1) Rapid PCR barcoding kit: RPB004/RLB001 
+2) Rapid barcoding kit: RBK004
+3) Native barcoding kit:NBD103/NBD104
+
+##Reads statistics with NanoComp v1.5.1:
+NanoComp -t 8 --readtype 1D -o <output directory> --verbose -f png --title <title of the report> -n <names of the fastq files to compare> --fastq 1.fastq 2.fastq <... x.fastq>
+  
+##Taxonomic classification:
+
+#Kraken2 v2.0.8a:
+kraken2 --db <database location> --report <output directory>/<sample ID>.report <input directory>/<sample ID>.fastq
+  
+#bracken v.2.5.3:
+bracken -d <database location> -i <input directory of Kraken2 results>/<sample ID>.report -w <output directory>/<sample ID>.outreport -r 1000 -l S -t 0
