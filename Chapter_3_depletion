@@ -1,12 +1,11 @@
 ##PhD thesis - Chapter 3 - Scripts
 
 ##Basecalling with Guppy v3.3.0:
+guppy_basecaller -i <input directory>/fast5 -s <output directory> -c <configuration file> --qscore_filtering -q 0 --recursive --device "cuda:0 cuda:1 cuda:2 cuda:3" gpu_runners_per_device 4
 
-#MinION basecall:
-guppy_basecaller -i <input directory>/fast5 -s <output directory> -c dna_r9.4.1_450bps_hac.cfg --qscore_filtering -q 0 --recursive --device "cuda:0 cuda:1 cuda:2 cuda:3" gpu_runners_per_device 4
-
-#PromethION basecall:
-guppy_basecaller -i <input directory>/fast5 -s <output directory> -c dna_r9.4.1_450bps_hac_prom.cfg --qscore_filtering -q 0 --recursive --device "cuda:0 cuda:1 cuda:2 cuda:3" gpu_runners_per_device 4
+configuration file, option -c:
+MinION: dna_r9.4.1_450bps_hac.cfg
+PromethION:dna_r9.4.1_450bps_hac_prom.cfg
 
 ##Demultiplexing with qcat v1.1.0
 qcat -f <input directory>/<guppy_basecall_file>.fastq -b <output directory> -k RPB004/RLB001 --trim --detect-middle
