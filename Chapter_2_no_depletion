@@ -1,1 +1,30 @@
+##PhD thesis - Chapter 2 - Scripts
 
+## MinION run statistics 
+jsa.hts.n50 -i <sample ID>.fastq
+
+##Trimming Illumina reads with Trimmomatic (v0.36):
+java -jar <trimmomatic installation directory>/trimmomatic-0.36.jar PE \
+-threads 32 \
+-phred33 \
+-trimlog <logs output directory>/trim_${sample}.log \
+<input directory>/<sample ID>_R1.fastq.gz <input directory>/<sample ID>_R2.fastq.gz \
+<output directory>/<sample ID>_P1.fastq.gz <output directory for unpaired reads>/<sample ID>_U1.fastq.gz <output directory>/<sample ID>_P2.fastq.gz <output directory for unpaired reads>/<sample ID>_U2.fastq.gz  \
+ILLUMINACLIP:<trimmomatic installation directory>/adapters/NexteraPE-PE.fa:3:30:10 SLIDINGWINDOW:4:15 LEADING:10 TRAILING:10 MINLEN:36
+
+##Taxonomic classification:
+
+#npAnalysis JAPSA package v1.7-08a, 
+classification of MinION reads with jsa-ST with Minimap2 (v.2.1-r311)
+classification of Illumina reads with jsa-ST with BWA (v.0.7.15-r1142-dirty)
+
+#extraction of Toxoplasma Gondii from One Codex:
+onecodex scripts filter_reads <classification id from One codex website> <reads_file_ID>.fastq -t <tax_id> -o <output directory>
+
+##Assembly of cultured samples:
+
+#Assembly with SPAdes v.3.10.1:
+/usr/bin/time -v -o <output directory>/metaSPAdes_time.log spades.py --meta -k 55,77,99,107,127 -1 <input directory>/<sample ID>_P1.fastq -2 <input directory>/<sample ID>_P2.fastq -o <output directory>
+  
+#binning of the assemblies with MyCC (MyCC_2017.ova):
+MyCC.py <contigs_ID>.fasta –a –meta (default: 4 mer and 1000 nucleotide contigs)
