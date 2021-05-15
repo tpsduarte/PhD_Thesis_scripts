@@ -1,1 +1,55 @@
+##PhD thesis - Chapter 5 - Scripts
+
+## Illumina reads:
+
+#FASTQC v0.11.8:
+
+cd <input directory>
+for f in *P1.fastq.gz
+do
+mkdir -p <output directory>/${f%%.*}
+zcat $f | fastqc -t 4 stdin -o  <output directory>/${f%%.*}
+done
+
+#Trimming adapters from Illumina reads with Trimmomatic (v0.36) (same as in Chapter 2 and 4):
+java -jar <trimmomatic installation directory>/trimmomatic-0.36.jar PE \
+-threads 32 \
+-phred33 \
+-trimlog <logs output directory>/trim_${sample}.log \
+<input directory>/<sample ID>_R1.fastq.gz <input directory>/<sample ID>_R2.fastq.gz \
+<output directory>/<sample ID>_P1.fastq.gz <output directory for unpaired reads>/<sample ID>_U1.fastq.gz <output directory>/<sample ID>_P2.fastq.gz <output directory for unpaired reads>/<sample ID>_U2.fastq.gz  \
+ILLUMINACLIP:<trimmomatic installation directory>/adapters/NexteraPE-PE.fa:3:30:10 SLIDINGWINDOW:4:15 LEADING:10 TRAILING:10 MINLEN:36
+
+#Trimming DADA2 workflow
+
+
+##Basecalling with Guppy v3.3.0 (same as in Chapter 3 and 4):
+
+guppy_basecaller -i <input directory>/fast5 -s <output directory> -c <configuration file> --qscore_filtering -q 0 --recursive --device "cuda:0 cuda:1 cuda:2 cuda:3" gpu_runners_per_device 4
+
+configuration file, option -c:
+MinION: dna_r9.4.1_450bps_hac.cfg
+PromethION:dna_r9.4.1_450bps_hac_prom.cfg
+
+##Demultiplexing with qcat v1.1.0 (same as in Chapter 3 and 4):
+
+qcat -f <input directory>/<guppy_basecall_file>.fastq -b <output directory> -k RPB004/RLB001 --trim --detect-middle
+
+##Reads statistics with NanoComp v1.5.1 (same as in Chapter 3 and 4):
+NanoComp -t 8 --readtype 1D -o <output directory> --verbose -f png --title <title of the report> -n <names of the fastq files to compare> --fastq 1.fastq 2.fastq <... x.fastq>
+
+
+
+##Taxonomic classification (same as in Chapter 4):  
+  
+#Kraken2 v2.0.8a with Kraken2 DB (RefSeq DB):
+kraken2 --db <database location> --output <output directory>/<sample ID>.krk --report <output directory>/<sample ID>.report <input directory>/<sample ID>.fastq
+
+#bracken v.2.5.3:
+bracken -d <database location> -i <input directory of Kraken2 results>/<sample ID>.report -w <output directory>/<sample ID>.outreport -r 1000 -l S -t 0
+
+
+
+
+
 
