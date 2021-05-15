@@ -12,7 +12,7 @@ zcat $f | fastqc -t 4 stdin -o  <output directory>/${f%%.*}
 done
 
 
-#Trimming Illumina reads with Trimmomatic (v0.36) (same as in Chapter 2):
+#Trimming adapters from Illumina reads with Trimmomatic (v0.36) (same as in Chapter 2):
 java -jar <trimmomatic installation directory>/trimmomatic-0.36.jar PE \
 -threads 32 \
 -phred33 \
