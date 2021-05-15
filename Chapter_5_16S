@@ -187,30 +187,30 @@ euc_clust <- hclust(euc_dist, method="ward.D2")
 euc_dend <- as.dendrogram(euc_clust, hang=0.1)
 dend_cols <- as.character(sample_info_tab$color[order.dendrogram(euc_dend)])
 labels_colors(euc_dend) <- dend_cols
-
 plot(euc_dend, ylab="VST Euc. dist.")
 
+12.5) Ordination
+vst_count_phy <- otu_table(vst_trans_count_tab, taxa_are_rows=T)
+sample_info_tab_phy <- sample_data(sample_info_tab)
+vst_physeq <- phyloseq(vst_count_phy, sample_info_tab_phy)
 
-library(phyloseq); packageVersion("phyloseq") #v.1.32.0
-library(Biostrings); packageVersion("Biostrings") #v.2.56.0
-library(ggplot2); packageVersion("ggplot2") #v.3.3.2
-library(decontam); packageVersion("decontam") #v.1.8.0
+12.5.1) Generate PCoA
+vst_pcoa <- ordinate(vst_physeq, method="MDS", distance="euclidean")
+eigen_vals <- vst_pcoa$values$Eigenvalues # allows us to scale the axes according to their magnitude of separating apart the samples
 
-#Taxonomic classification:
-library(DECIPHER); packageVersion("DECIPHER") #2.16.1
+plot_ordination(vst_physeq, vst_pcoa, color="color") + 
+  geom_point(size=1) + labs(col="type") + #Day_collect or PatientID or type is the same. Not sure why this is needed
+  geom_text(aes(label=rownames(sample_info_tab), hjust=0.3, vjust=-0.4)) + 
+  coord_fixed(sqrt(eigen_vals[2]/eigen_vals[1])) + ggtitle("PCoA") + 
+  scale_color_manual(values=unique(sample_info_tab$color[order(sample_info_tab$color)])) + 
+  theme(legend.position="none")
 
-1) Create a DNAStringSet from the ASVs:
-dna <- DNAStringSet(getSequences(seqtab2.nochim)) 
-load("<location of database>/SILVA_SSU_r138_2019.RData") 
-ids <- IdTaxa(dna, trainingSet, strand="top", processors=NULL, verbose=FALSE) 
-ranks <- c("domain", "phylum", "class", "order", "family", "genus", "species") #species doesn't exist in the 16S SILVA database
+13) Alpha diversity
 
-2) Convert "Taxa" to a matrix:
-taxid <- t(sapply(ids, function(x) {
-  m <- match(ranks, x$rank)
-  taxa <- x$taxon[m]
-  taxa[startsWith(taxa, "unclassified_")] <- NA
-  taxa
-}))
-colnames(taxid) <- ranks
-rownames(taxid) <- gsub(pattern=">", replacement="", x=asv_headers)
+13.1) Rarefaction curves:
+rarecurve(t(count_tab), step=100, col=sample_info_tab$color, lwd=2, ylab="ASVs", label=F)
+abline(v=(min(rowSums(t(count_tab)))))
+
+
+
+
