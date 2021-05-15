@@ -3,7 +3,7 @@
 ## MinION run statistics 
 jsa.hts.n50 -i <sample ID>.fastq
 
-##Trimming Illumina reads with Trimmomatic (v0.36):
+##Trimming adapters from Illumina reads with Trimmomatic (v0.36):
 java -jar <trimmomatic installation directory>/trimmomatic-0.36.jar PE \
 -threads 32 \
 -phred33 \
@@ -18,7 +18,7 @@ ILLUMINACLIP:<trimmomatic installation directory>/adapters/NexteraPE-PE.fa:3:30:
 classification of MinION reads with jsa-ST with Minimap2 (v.2.1-r311)
 classification of Illumina reads with jsa-ST with BWA (v.0.7.15-r1142-dirty)
 
-#extraction of Toxoplasma Gondii from One Codex:
+#Extraction of Toxoplasma Gondii from One Codex:
 onecodex scripts filter_reads <classification id from One codex website> <reads_file_ID>.fastq -t <tax_id> -o <output directory>
 
 ##Assembly of cultured samples:
