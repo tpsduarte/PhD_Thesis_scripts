@@ -20,7 +20,35 @@ java -jar <trimmomatic installation directory>/trimmomatic-0.36.jar PE \
 <output directory>/<sample ID>_P1.fastq.gz <output directory for unpaired reads>/<sample ID>_U1.fastq.gz <output directory>/<sample ID>_P2.fastq.gz <output directory for unpaired reads>/<sample ID>_U2.fastq.gz  \
 ILLUMINACLIP:<trimmomatic installation directory>/adapters/NexteraPE-PE.fa:3:30:10 SLIDINGWINDOW:4:15 LEADING:10 TRAILING:10 MINLEN:36
 
-#Trimming DADA2 workflow
+#Trimming primers from Illumina reads using DADA2 (R version 4.0.2):
+library(dada2); packageVersion("dada2") #1.16.0 
+fwd <- "<forward (P1) reads location>"
+rev <- "<reverse (P2) reads location"
+filt <- "<output of the forward reads with primers trimmed>"
+filt.rev <- "<output of the reverse reads with primers trimmed>"
+
+filterAndTrim(fwd, filt, rev, filt.rev, trimLeft=c(17,20), compress = TRUE)
+
+path <- "<path to the trimmed reads>"
+fnFs <- sort(list.files(path, pattern="_P1.fastq.gz", full.names = TRUE))
+fnRs <- sort(list.files(path, pattern="_P2.fastq.gz", full.names = TRUE))
+sample.names <- sapply(strsplit(basename(fnFs), "_"), `[`, 1)
+
+#Qualtity plots of the trimmed reads: 
+plotQualityProfile(fnFs[1:14]) 
+plotQualityProfile(fnRs[1:14])
+
+# Place filtered files in filtered/ subdirectory
+filtFs <- file.path(path, "filtered", paste0(sample.names, "_F_filt.fastq.gz"))
+filtRs <- file.path(path, "filtered", paste0(sample.names, "_R_filt.fastq.gz"))
+names(filtFs) <- sample.names
+names(filtRs) <- sample.names
+
+#Filter reads based on the quality plots:
+out <- filterAndTrim(fnFs, filtFs, fnRs, filtRs, truncLen=c(0,230), 
+                     maxN=0, maxEE=c(2,2), truncQ=2, rm.phix=TRUE,
+                     compress=TRUE, multithread=FALSE)
+
 
 
 ##Basecalling with Guppy v3.3.0 (same as in Chapter 3 and 4):
@@ -50,6 +78,20 @@ bracken -d <database location> -i <input directory of Kraken2 results>/<sample I
 
 
 
+##DADA2 workflow for Beta and Alpha diversity
+library(dada2); packageVersion("dada2") #1.16.0 
+library(DECIPHER); packageVersion("DECIPHER") #2.16.1
+library(phyloseq); packageVersion("phyloseq") #1.32.0
+library(Biostrings); packageVersion("Biostrings") #2.56.0
+library(ggplot2); packageVersion("ggplot2") #3.3.2
+library(decontam); packageVersion("decontam") #1.8.0
 
-
+#library("phyloseq"); packageVersion("phyloseq")  # 1.32.0
+library("vegan"); packageVersion("vegan") #2.5.6
+library("DESeq2"); packageVersion("DESeq2") # 1.28.1
+#library("ggplot2"); packageVersion("ggplot2") # 3.3.2
+library("dendextend"); packageVersion("dendextend") #1.13.4
+library("tidyr"); packageVersion("tidyr") #1.1.0
+library("viridis"); packageVersion("viridis") #0.5.1
+library("reshape"); packageVersion("reshape") #0.8.8
 
