@@ -23,7 +23,7 @@ ILLUMINACLIP:<trimmomatic installation directory>/adapters/NexteraPE-PE.fa:3:30:
 #Trimming primers from Illumina reads using DADA2 (R version 4.0.2):
 library(dada2); packageVersion("dada2") #1.16.0 
 
-A) Trimming reads:
+1) Trimming reads:
 fwd <- "<forward (P1) reads location>"
 rev <- "<reverse (P2) reads location"
 filt <- "<output of the forward reads with primers trimmed>"
@@ -36,28 +36,28 @@ fnFs <- sort(list.files(path, pattern="_P1.fastq.gz", full.names = TRUE))
 fnRs <- sort(list.files(path, pattern="_P2.fastq.gz", full.names = TRUE))
 sample.names <- sapply(strsplit(basename(fnFs), "_"), `[`, 1)
 
-B) Qualtity plots of the trimmed reads: 
+2) Qualtity plots of the trimmed reads: 
 plotQualityProfile(fnFs[1:14]) 
 plotQualityProfile(fnRs[1:14])
 
-C) Place filtered files in filtered/ subdirectory
+3) Place filtered files in filtered/ subdirectory
 filtFs <- file.path(path, "filtered", paste0(sample.names, "_F_filt.fastq.gz"))
 filtRs <- file.path(path, "filtered", paste0(sample.names, "_R_filt.fastq.gz"))
 names(filtFs) <- sample.names
 names(filtRs) <- sample.names
 
-D) Filter reads based on the quality plots:
+4) Filter reads based on the quality plots:
 out <- filterAndTrim(fnFs, filtFs, fnRs, filtRs, truncLen=c(0,230), 
                      maxN=0, maxEE=c(2,2), truncQ=2, rm.phix=TRUE,
                      compress=TRUE, multithread=FALSE)
 
 NOTE: truncLen=c(0,230) for samples of patients 1, 2 and 3 and truncLen=c(260,190) for samples of patients 5 and 6.
 
-E) Error rates 
+5) Error rates 
 errF <- learnErrors(filtFs, multithread=TRUE)
 errR <- learnErrors(filtRs, multithread=TRUE)
 
-F) Errors visualization:
+6) Errors visualization:
 plotErrors(errF, nominalQ=TRUE)
 plotErrors(errR, nominalQ=TRUE)
 
@@ -88,20 +88,129 @@ bracken -d <database location> -i <input directory of Kraken2 results>/<sample I
 
 
 
-##DADA2 workflow for Beta and Alpha diversity
+##DADA2 workflow for Beta and Alpha diversity calculation from 16S Illumina reads (R version 4.0.2):
+
+#tutorial followed: https://astrobiomike.github.io/amplicon/dada2_workflow_ex#dada2
+
+#Generation of ASV:
+
 library(dada2); packageVersion("dada2") #1.16.0 
+path <- "<path to the trimmed and filtered reads that are together in the same directory>"
+
+1) Place filtered files in filtered/ subdirectory
+filtFs <- sort(list.files(path, pattern="_F_filt.fastq.gz", full.names = TRUE))
+filtRs <- sort(list.files(path, pattern="_R_filt.fastq.gz", full.names = TRUE))
+2) Extract sample names:
+sample.names <- sapply(strsplit(basename(filtFs), "_"), `[`, 1)
+View(sample.names)
+3) Error rates 
+errF <- learnErrors(filtFs, multithread=TRUE)
+errR <- learnErrors(filtRs, multithread=TRUE)
+4) Errors visualization:
+plotErrors(errF, nominalQ=TRUE)
+plotErrors(errR, nominalQ=TRUE)
+
+4) core sample inference algorithm to the filtered and trimmed sequence data
+dadaFs <- dada(filtFs, err=errF, multithread=TRUE)
+dadaRs <- dada(filtRs, err=errR, multithread=TRUE)
+
+5) merge paired end reads
+mergers <- mergePairs(dadaFs, filtFs, dadaRs, filtRs, verbose=TRUE)
+
+6) ASV table generation
+seqtab <- makeSequenceTable(mergers)
+6.1) Count of samples and ASV: 
+dim(seqtab) 
+
+7) Distribution of sequence lengths:
+table(nchar(getSequences(seqtab)))
+
+8) Re-size the ASV table based on the sequence length (step 7). 16S gene amplicon V3-V4 is 466bp, but because of the trimming and filtering (to be more precise, amplicon without primers should be 428bp), they might have fallen below 400. The value chosen was 350:440.
+seqtab2 <- seqtab[,nchar(colnames(seqtab)) %in% 350:440] 
+
+9) Count of samples and ASV: 
+dim(seqtab2) 
+table(nchar(getSequences(seqtab2)))
+
+10) Removal of chimeras:
+seqtab2.nochim <- removeBimeraDenovo(seqtab2, method="consensus", multithread=TRUE, verbose=TRUE)
+dim(seqtab2.nochim)
+table(nchar(getSequences(seqtab2.nochim)))
+
+10.1) Calculation of chimeras (100 minus the value (in % obtained below)):
+sum(seqtab2.nochim)/sum(seqtab2)
+
+11) Save ASV in fasta and as count table:
+asv_seqs <- colnames(seqtab2.nochim)                                  
+asv_headers <- vector(dim(seqtab2.nochim)[2], mode="character") #change seq. header to ASV_1, etc...      
+for (i in 1:dim(seqtab2.nochim)[2]) {        
+  asv_headers[i] <- paste(">ASV", i, sep="_")
+}
+11.1) Save file as fasta:
+asv_fasta <- c(rbind(asv_headers, asv_seqs))
+write(asv_fasta, "<output directory>/<ASV output file>.fa")  
+11.2) Save counts file as tsv:
+asv_tab <- t(seqtab2.nochim)
+row.names(asv_tab) <- sub(">", "", asv_headers)
+write.table(asv_tab, "<output directory>/<ASV output file>_counts.tsv", sep="\t", quote=F, col.names=NA)
+
+12) Beta diversity
+
+library("phyloseq"); packageVersion("phyloseq")  #v.1.32.0
+library("vegan"); packageVersion("vegan") #v.2.5.7
+library("DESeq2"); packageVersion("DESeq2") #v.1.28.1
+library("ggplot2"); packageVersion("ggplot2") #v.3.3.3
+library("dendextend"); packageVersion("dendextend") #v.1.15.1
+library("tidyr"); packageVersion("tidyr") #v.1.1.3
+library("viridis"); packageVersion("viridis") #v.0.6.1
+library("reshape"); packageVersion("reshape") #v.0.8.8
+
+count_tab <- read.table("<output directory>/<ASV output file>_counts.tsv", header=T, row.names=1,
+                        check.names=F, sep="\t")[ , -c(1:1)]   #choose 1:1 because the only NTC/blank I had was in the 1st column. 
+
+12.1) Create a table with some info of the samples ("sample_info.txt"), e.g: sample ID, patient ID, sample type and colour (a different colour was given to each patient: P1-blue; P2-black; P3-darkgreen; P5-brown2; P6-chocolate4).
+sample_info_tab <- read.table("./sample_info.txt", header=T, row.names=1,
+                              check.names=F, sep="\t")
+
+12.2) DESeq2 object:
+deseq_counts <- DESeqDataSetFromMatrix(count_tab, colData = sample_info_tab, design = ~1) 
+deseq_counts <- estimateSizeFactors(deseq_counts, type = "poscounts")
+deseq_counts_vst <- varianceStabilizingTransformation(deseq_counts)
+vst_trans_count_tab <- assay(deseq_counts_vst)
+
+12.3) calculate Euclidean distance matrix:
+euc_dist <- dist(t(vst_trans_count_tab))
+euc_dist
+
+12.4) Hierarchical clustering of Euclidean distances:
+euc_clust <- hclust(euc_dist, method="ward.D2")
+euc_dend <- as.dendrogram(euc_clust, hang=0.1)
+dend_cols <- as.character(sample_info_tab$color[order.dendrogram(euc_dend)])
+labels_colors(euc_dend) <- dend_cols
+
+plot(euc_dend, ylab="VST Euc. dist.")
+
+
+library(phyloseq); packageVersion("phyloseq") #v.1.32.0
+library(Biostrings); packageVersion("Biostrings") #v.2.56.0
+library(ggplot2); packageVersion("ggplot2") #v.3.3.2
+library(decontam); packageVersion("decontam") #v.1.8.0
+
+#Taxonomic classification:
 library(DECIPHER); packageVersion("DECIPHER") #2.16.1
-library(phyloseq); packageVersion("phyloseq") #1.32.0
-library(Biostrings); packageVersion("Biostrings") #2.56.0
-library(ggplot2); packageVersion("ggplot2") #3.3.2
-library(decontam); packageVersion("decontam") #1.8.0
 
-#library("phyloseq"); packageVersion("phyloseq")  # 1.32.0
-library("vegan"); packageVersion("vegan") #2.5.6
-library("DESeq2"); packageVersion("DESeq2") # 1.28.1
-#library("ggplot2"); packageVersion("ggplot2") # 3.3.2
-library("dendextend"); packageVersion("dendextend") #1.13.4
-library("tidyr"); packageVersion("tidyr") #1.1.0
-library("viridis"); packageVersion("viridis") #0.5.1
-library("reshape"); packageVersion("reshape") #0.8.8
+1) Create a DNAStringSet from the ASVs:
+dna <- DNAStringSet(getSequences(seqtab2.nochim)) 
+load("<location of database>/SILVA_SSU_r138_2019.RData") 
+ids <- IdTaxa(dna, trainingSet, strand="top", processors=NULL, verbose=FALSE) 
+ranks <- c("domain", "phylum", "class", "order", "family", "genus", "species") #species doesn't exist in the 16S SILVA database
 
+2) Convert "Taxa" to a matrix:
+taxid <- t(sapply(ids, function(x) {
+  m <- match(ranks, x$rank)
+  taxa <- x$taxon[m]
+  taxa[startsWith(taxa, "unclassified_")] <- NA
+  taxa
+}))
+colnames(taxid) <- ranks
+rownames(taxid) <- gsub(pattern=">", replacement="", x=asv_headers)
