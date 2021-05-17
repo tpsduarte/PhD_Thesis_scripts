@@ -156,7 +156,7 @@ D) Unicycler (v0.4.7):
 ## Sequence typing 
 
 #Extraction of Staphylococcus aureus reads 
-jsa.seq.binseq --sequence <sample ID>.fastq --map <kraken2 output>.krk --typer k --include 1280 --output <output directory>
+jsa.seq.binseq --sequence <sample ID>.fastq --map <kraken2 output>.krk --typer k --include 1280 --output <output directory ID (NOTE: cannot be previously created)>
   
 #Sequence typing of Staphylococcus aureus reads with sketchy (v0.4.4):
 sketchy run --fastq <input directory>/<sample ID>.fastq --sketchy ~/.sketchy/saureus_15_10000 -o <output directory> --limit 1000
