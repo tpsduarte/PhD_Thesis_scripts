@@ -77,9 +77,12 @@ option -k:
 for WGS: RPB004/RLB001
 for 16S: RAB204
 
+##Filtering ONT 16S reads within a size range:
+
+awk 'BEGIN {FS = "\t" ; OFS = "\n"} {header = $0 ; getline seq ; getline qheader ; getline qseq ; if (length(seq) >= 1000 && length(seq) < 1600) {print header, seq, qheader, qseq}}' < <input file ID>.fastq > <output file ID>.fastq
+
 ##Reads statistics with NanoComp v1.5.1 (same as in Chapter 3 and 4):
 NanoComp -t 8 --readtype 1D -o <output directory> --verbose -f png --title <title of the report> -n <names of the fastq files to compare> --fastq 1.fastq 2.fastq <... x.fastq>
-
 
 
 ##Taxonomic classification (same as in Chapter 4):  
