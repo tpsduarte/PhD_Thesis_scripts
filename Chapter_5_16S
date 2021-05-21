@@ -71,7 +71,11 @@ PromethION:dna_r9.4.1_450bps_hac_prom.cfg
 
 ##Demultiplexing with qcat v1.1.0 (same as in Chapter 3 and 4):
 
-qcat -f <input directory>/<guppy_basecall_file>.fastq -b <output directory> -k RPB004/RLB001 --trim --detect-middle
+qcat -f <input directory>/<guppy_basecall_file>.fastq -b <output directory> -k <kit ID> --trim --detect-middle
+
+option -k:
+for WGS: RPB004/RLB001
+for 16S: RAB204
 
 ##Reads statistics with NanoComp v1.5.1 (same as in Chapter 3 and 4):
 NanoComp -t 8 --readtype 1D -o <output directory> --verbose -f png --title <title of the report> -n <names of the fastq files to compare> --fastq 1.fastq 2.fastq <... x.fastq>
