@@ -91,9 +91,14 @@ NanoComp -t 8 --readtype 1D -o <output directory> --verbose -f png --title <titl
 kraken2 --db <database location> --output <output directory>/<sample ID>.krk --report <output directory>/<sample ID>.report <input directory>/<sample ID>.fastq
 
 #bracken v.2.5.3:
-bracken -d <database location> -i <input directory of Kraken2 results>/<sample ID>.report -w <output directory>/<sample ID>.outreport -r 1000 -l S -t 0
+bracken -d <database location> -i <input directory of Kraken2 results>/<sample ID>.report -w <output directory>/<sample ID>.outreport -r <number of bases> -l S -t 0
 
-
+Option -r:
+16S Illumina primer filtered reads: 420 
+16S Illumina primers not filtered reads: 200
+16S ONT reads: 1400
+WGS Illumina reads: 200
+WGS ONT reads: 1000
 
 ##DADA2 workflow for Beta and Alpha diversity calculation from 16S Illumina reads (R version 4.0.2):
 
