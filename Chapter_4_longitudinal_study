@@ -74,7 +74,12 @@ bedtools bamtofastq -i <output directory 9>/<sample ID>.bam -fq <output director
 kraken2 --db <database location> --output <output directory>/<sample ID>.krk --report <output directory>/<sample ID>.report <input directory>/<sample ID>.fastq
 
 #bracken v.2.5.3:
-bracken -d <database location> -i <input directory of Kraken2 results>/<sample ID>.report -w <output directory>/<sample ID>.outreport -r 1000 -l S -t 0
+bracken -d <database location> -i <input directory of Kraken2 results>/<sample ID>.report -w <output directory>/<sample ID>.outreport -r <number of bases> -l S -t 0
+
+Option -r:
+WGS Illumina reads: 200
+WGS ONT reads: 1000
+WGS Illumina/ONT/hybrid assemblies: 1400
 
 #Blastn   
 blastn -query <input directory>/<sample ID>.fasta -db <db directory>/bacteriaDB_blastn -outfmt 6 -out <output directory>/<sample ID>.txt -evalue 0.1
