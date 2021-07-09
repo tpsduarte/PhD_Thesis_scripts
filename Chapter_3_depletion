@@ -1,5 +1,8 @@
 ##PhD thesis - Chapter 3 - Scripts
 
+##Counting levels of classification in Kraken2 DB and fungi DB (RefSeq)
+kraken2-inspect --db <path to the database> --report-zero-counts > <output directory><output file ID>.txt
+
 ##Basecalling with Guppy v3.3.0:
 guppy_basecaller -i <input directory>/fast5 -s <output directory> -c <configuration file> --qscore_filtering -q 0 --recursive --device "cuda:0 cuda:1 cuda:2 cuda:3" gpu_runners_per_device 4
 
