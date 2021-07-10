@@ -33,9 +33,6 @@ PromethION:dna_r9.4.1_450bps_hac_prom.cfg
 
 qcat -f <input directory>/<guppy_basecall_file>.fastq -b <output directory> -k RPB004/RLB001 --trim --detect-middle
 
-##Reads statistics with NanoComp v1.5.1 (same as in Chapter 3):
-NanoComp -t 8 --readtype 1D -o <output directory> --verbose -f png --title <title of the report> -n <names of the fastq files to compare> --fastq 1.fastq 2.fastq <... x.fastq>
-
 ##Illumina reads pre-analysis:
 1) Obtain .sam file from mapping WGS fastq to human genome GRch38 with BWA (v0.7.17):
   bwa mem <GRCh38 directory>/GRCh38_full_analysis_set_plus_decoy_hla.fa <input directory>/<sample ID>_P1.fastq.gz <input directory>/<sample ID>_P2.fastq.gz > <input directory>/<sample ID>.sam
@@ -67,6 +64,13 @@ bedtools bamtofastq -i <output directory 9>/<sample ID>.bam -fq <output director
 
 2) same as above for Illumina reads, but with removal of fq2 and without the removal of duplicates (steps 5 and 6). 
 
+## Sequencing runs statistics:
+
+1)ONT reads statistics with NanoComp v1.5.1 (same as in Chapter 3):
+NanoComp -t 8 --readtype 1D -o <output directory> --verbose -f png --title <title of the report> -n <names of the fastq files to compare> --fastq 1.fastq 2.fastq <... x.fastq>
+
+2)Illumina reads statistics (same as in Chapter 2):
+jsa.hts.n50 -i <file ID>.fastq
 
 ##Taxonomic classification:  
   
