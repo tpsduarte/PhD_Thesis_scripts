@@ -6,7 +6,7 @@ Title of the thesis:
 Deep sequencing of microbial communities in cystic fibrosis airways
 
 PhD candidate:
-Tania Patricia Da Silva Duarte
+Tania P. S. Duarte
 
 Affiliation:
 Institute for Molecular Bioscience, The University of Queensland. QLD, Australia
